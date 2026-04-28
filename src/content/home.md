@@ -36,8 +36,8 @@ Forever.
 Hosting [LungA Radio School](https://www.lungaschool.is/en/radio): a-radio-making-school, making-school-over-radio.
 Generally entangled with [LungA School](http://lungaschool.is/).
 Part of the Independent Community Radio Network/[ICRN](https://icrn.live/).
-Sign up for our newsletter (link to the newsletter section)
-Follow our Telegram group to get notified (link to the telegram group)
-Check out the broadcast archive. (link to the archive section)
+Sign up for our [newsletter](#newsletter)
+Follow our Telegram group to get notified
+Check out the [broadcast archive](#archive).
 Spend time in the [LungA library](http://lungalibrary.is).
 [Get in touch with us.](mailto:contact@seydisfjordurcommunityradio.net)
