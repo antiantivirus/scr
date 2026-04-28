@@ -88,6 +88,10 @@
     margin-top: 1em;
   }
 
+  .prose a {
+    text-decoration: underline;
+  }
+
   @media (min-width: 1024px) {
     .font-h1 {
       font-size: 1.875rem;

@@ -1,25 +1,22 @@
 ---
-import { getCollection, render } from 'astro:content';
-import { XMLParser } from 'fast-xml-parser';
-import MainLayout from '../layouts/MainLayout.astro';
+import { getCollection, render } from "astro:content";
+import { XMLParser } from "fast-xml-parser";
+import MainLayout from "../layouts/MainLayout.astro";
+import { renderMarkdown } from "../lib/markdown";
 
 // --- Content (src/content/home.md) ---
 // Body        → about section (rendered as markdown with remark-breaks)
 // Frontmatter → archive, newsletter, footer
-const [homeEntry] = await getCollection('home');
+const [homeEntry] = await getCollection("home");
 const { Content: AboutContent } = await render(homeEntry);
 const { archive, newsletter, footer } = homeEntry.data;
 
-// Convert multi-line frontmatter text to HTML paragraphs
-function textToHtml(text: string) {
-  return text.trim()
-    .split('\n\n')
-    .map(para => `<p>${para.trim().replace(/\n/g, '<br>')}</p>`)
-    .join('');
-}
+const archiveHtml = archive ? await renderMarkdown(archive) : "";
+const newsletterHtml = newsletter ? await renderMarkdown(newsletter) : "";
+const footerHtml = footer ? await renderMarkdown(footer) : "";
 
 // --- Schedule ---
-const tz = 'Atlantic/Reykjavik';
+const tz = "Atlantic/Reykjavik";
 const now = new Date();
 const start = new Date(now);
 start.setHours(0, 0, 0, 0);
@@ -29,31 +26,39 @@ end.setHours(23, 59, 59, 999);
 
 const scheduleParams = new URLSearchParams({
   startDate: start.toISOString(),
-  endDate:   end.toISOString(),
-  timezone:  tz,
-  expand:    'artist'
+  endDate: end.toISOString(),
+  timezone: tz,
+  expand: "artist",
 });
 
 let days: Record<string, any[]> = {};
 try {
-  const res  = await fetch(
-    `https://api.radiocult.fm/api/station/seyisfjorur-community-radio/schedule?${scheduleParams}`
+  const res = await fetch(
+    `https://api.radiocult.fm/api/station/seyisfjorur-community-radio/schedule?${scheduleParams}`,
   );
   const data = await res.json();
   for (const show of data.schedules ?? []) {
-    const parts = new Intl.DateTimeFormat('en-GB', {
-      weekday: 'short', day: 'numeric', month: 'long', timeZone: tz
+    const parts = new Intl.DateTimeFormat("en-GB", {
+      weekday: "short",
+      day: "numeric",
+      month: "long",
+      timeZone: tz,
     }).formatToParts(new Date(show.start));
-    const key = `${parts.find(p => p.type === 'weekday')?.value} ${parts.find(p => p.type === 'day')?.value} ${parts.find(p => p.type === 'month')?.value}`;
+    const key = `${parts.find((p) => p.type === "weekday")?.value} ${parts.find((p) => p.type === "day")?.value} ${parts.find((p) => p.type === "month")?.value}`;
     if (!days[key]) days[key] = [];
     days[key].push(show);
   }
-} catch { /* show empty schedule on failure */ }
+} catch {
+  /* show empty schedule on failure */
+}
 
 function formatTimeRange(startStr: string, endStr: string) {
   const fmt = (s: string) =>
-    new Intl.DateTimeFormat('en-GB', {
-      hour: '2-digit', minute: '2-digit', timeZone: tz, hour12: false
+    new Intl.DateTimeFormat("en-GB", {
+      hour: "2-digit",
+      minute: "2-digit",
+      timeZone: tz,
+      hour12: false,
     }).format(new Date(s));
   return `${fmt(startStr)} \u2013 ${fmt(endStr)}`;
 }
@@ -61,100 +66,180 @@ function formatTimeRange(startStr: string, endStr: string) {
 // --- Archive (SoundCloud RSS) ---
 let tracks: { title: string; url: string; stream: string; date: string }[] = [];
 try {
-  const rssRes  = await fetch(
-    'https://feeds.soundcloud.com/users/soundcloud:users:332067787/sounds.rss'
+  const rssRes = await fetch(
+    "https://feeds.soundcloud.com/users/soundcloud:users:332067787/sounds.rss",
   );
-  const parser  = new XMLParser({
+  const parser = new XMLParser({
     ignoreAttributes: false,
-    attributeNamePrefix: '@_',
-    isArray: (name: string) => name === 'item'
+    attributeNamePrefix: "@_",
+    isArray: (name: string) => name === "item",
   });
   const rssData = parser.parse(await rssRes.text());
   for (const item of rssData?.rss?.channel?.item ?? []) {
     if (tracks.length >= 5) break;
-    const streamUrl = item.enclosure?.['@_url'] ?? '';
+    const streamUrl = item.enclosure?.["@_url"] ?? "";
     if (!streamUrl) continue;
-    const parts = new Intl.DateTimeFormat('en-GB', {
-      weekday: 'short', day: 'numeric', month: 'long', timeZone: tz
+    const parts = new Intl.DateTimeFormat("en-GB", {
+      weekday: "short",
+      day: "numeric",
+      month: "long",
+      timeZone: tz,
     }).formatToParts(new Date(item.pubDate));
     tracks.push({
-      title:  item.title ?? '',
-      url:    item.link  ?? '',
+      title: item.title ?? "",
+      url: item.link ?? "",
       stream: streamUrl,
-      date:   `${parts.find(p => p.type === 'weekday')?.value} ${parts.find(p => p.type === 'day')?.value} ${parts.find(p => p.type === 'month')?.value}`
+      date: `${parts.find((p) => p.type === "weekday")?.value} ${parts.find((p) => p.type === "day")?.value} ${parts.find((p) => p.type === "month")?.value}`,
     });
   }
-} catch { /* show empty archive on failure */ }
+} catch {
+  /* show empty archive on failure */
+}
 
 const underlineSVGs = [
   '<svg width="259" height="15" viewBox="0 0 259 15" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M0.5 5.7485C0.880688 5.7485 1.26138 5.7485 17.3409 5.7485C33.4204 5.7485 65.1872 5.7485 73.5988 4.85116C82.0104 3.95383 66.1042 2.15915 57.1922 1.23462C48.2802 0.310094 46.8444 0.310094 58.1427 0.9453C69.441 1.58051 93.5168 2.85092 101.391 3.74521C109.265 4.63949 100.208 5.11916 108.881 5.76544C117.554 6.41172 144.232 7.21008 156.425 7.85249C168.619 8.4949 165.52 8.95716 174.389 9.20889C183.257 9.46062 204.188 9.48782 212.468 10.317C220.748 11.1463 215.743 12.7767 213.618 13.6873C211.493 14.5979 212.399 14.7393 219.804 13.6505C227.209 12.5617 241.086 10.2384 257.671 6.92188" stroke="#547B23" stroke-linecap="round"/></svg>',
   '<svg width="259" height="17" viewBox="0 0 259 17" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M0.5 9.73882C0.632697 9.73882 11.7617 9.73882 25.9348 9.39892C28.2312 9.34385 36.8622 9.68015 66.227 12.7125C77.2678 13.8526 80.5133 13.7435 79.4354 13.7435C78.3576 13.7435 72.8692 13.7435 77.8829 13.7435C113.502 13.7435 107.896 14.6717 117.068 15.5058C129.287 16.6171 157.07 14.865 168.015 14.4776C172.298 14.326 177.877 13.9709 201.193 13.3955C212.037 13.1279 220.827 11.6694 223.643 11.0113C226.458 10.3532 223.021 10.2227 221.943 10.1195C220.866 10.0164 222.251 9.94462 228.586 8.40827C234.921 6.87192 246.164 3.87319 258.31 0.500122" stroke="#547B23" stroke-linecap="round"/></svg>',
   '<svg width="256" height="16" viewBox="0 0 256 16" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M0.501496 14.7181C0.484832 14.7343 0.468168 14.7505 8.72513 14.7669C16.9821 14.7833 33.5132 14.7995 46.6214 14.526C59.7297 14.2525 68.9142 13.6889 73.8757 13.2611C79.3225 12.7914 83.0581 8.27877 87.4943 3.67916C89.4337 1.66831 91.4238 0.889376 92.4015 0.585721C92.859 0.443614 93.2762 0.466835 93.6632 0.739398C96.3888 2.65914 95.9619 7.35781 96.4696 7.93309C97.1465 8.70004 102.395 7.46623 111.414 6.4968C116.142 5.9886 121.243 6.19783 124.57 6.29988C127.896 6.40192 129.312 6.58228 149.353 7.25841C169.394 7.93454 208.018 9.10098 228.193 9.65409C248.368 10.2072 248.924 10.1116 250.14 9.82837C251.357 9.54511 253.218 9.07707 254.114 8.64187C255.01 8.20668 254.885 7.81852 254.49 7.55092C253.433 7.14806 249.226 6.96949 243.623 6.96228C241.547 6.99427 241.026 7.09867 240.388 7.25226" stroke="#547B23" stroke-linecap="round"/></svg>',
-  '<svg width="263" height="21" viewBox="0 0 263 21" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M0.5 15.206C0.513233 15.206 0.526465 15.206 16.0533 15.1852C31.5801 15.1643 62.6201 15.1227 85.2153 14.825C107.81 14.5274 121.02 13.9751 128.374 13.8834C136.829 13.778 138.9 14.7762 143.537 15.1799C147.22 15.5006 153.639 15.5792 162.718 16.4504C171.797 17.3216 183.351 18.861 190.932 19.6372C198.514 20.4133 201.772 20.3795 204.643 20.205C207.515 20.0305 209.9 19.7163 212.712 19.0433C215.524 18.3703 218.69 17.3479 223.732 16.4946C228.774 15.6413 235.597 14.988 239.538 14.5277C246.494 12.8895 251.085 10.1353 255.357 6.94044C257.656 5.12866 260.223 2.93007 262.335 0.5" stroke="#547B23" stroke-linecap="round"/></svg>'
+  '<svg width="263" height="21" viewBox="0 0 263 21" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M0.5 15.206C0.513233 15.206 0.526465 15.206 16.0533 15.1852C31.5801 15.1643 62.6201 15.1227 85.2153 14.825C107.81 14.5274 121.02 13.9751 128.374 13.8834C136.829 13.778 138.9 14.7762 143.537 15.1799C147.22 15.5006 153.639 15.5792 162.718 16.4504C171.797 17.3216 183.351 18.861 190.932 19.6372C198.514 20.4133 201.772 20.3795 204.643 20.205C207.515 20.0305 209.9 19.7163 212.712 19.0433C215.524 18.3703 218.69 17.3479 223.732 16.4946C228.774 15.6413 235.597 14.988 239.538 14.5277C246.494 12.8895 251.085 10.1353 255.357 6.94044C257.656 5.12866 260.223 2.93007 262.335 0.5" stroke="#547B23" stroke-linecap="round"/></svg>',
 ];
 ---
 
 <MainLayout>
-
-  <img src="/images/antenna.jpg" alt="" class="hidden lg:block fixed top-0 left-0 w-1/2 h-screen object-cover -z-10">
+  <img
+    src="/images/antenna.jpg"
+    alt=""
+    class="hidden lg:block fixed top-0 left-0 w-1/2 h-screen object-cover -z-10"
+  />
 
   <div class="grid grid-cols-1 lg:grid-cols-2 gap-y-32">
-
     <!-- Rose / hero -->
     <div class="hidden lg:block relative lg:col-start-1 pointer-events-none">
-      <img src="/images/token1.png" alt="" class="absolute top-1/8 left-1/2 w-[120px] pointer-events-none">
-      <img src="/images/token3.png" alt="" class="absolute top-1/3 left-[5%] w-[94px]">
+      <img
+        src="/images/token1.png"
+        alt=""
+        class="absolute top-1/8 left-1/2 w-[120px] pointer-events-none"
+      />
+      <img
+        src="/images/token3.png"
+        alt=""
+        class="absolute top-1/3 left-[5%] w-[94px]"
+      />
     </div>
-    <section id="rose" class="relative lg:col-start-2 h-screen flex items-center justify-center">
-      <img src="/images/rose.png" alt="" class="w-[50%] h-auto lg:max-w-[380px] lg:max-h-[380px] lg:w-full mx-auto">
-      <img src="/images/antenna.jpg" alt="" class="block lg:hidden absolute bottom-1/8 min-w-[125px] right-0 w-1/5 object-cover">
-      <img src="/images/token4.png" alt="" class="block w-[160px] absolute top-[20%] left-[5%] pointer-events-none">
-      <img src="/images/token13.png" alt="" class="block w-[100px] absolute bottom-[15%] left-[3%] pointer-events-none">
+    <section
+      id="rose"
+      class="relative lg:col-start-2 h-screen flex items-center justify-center"
+    >
+      <img
+        src="/images/rose.png"
+        alt=""
+        class="w-[50%] h-auto lg:max-w-[380px] lg:max-h-[380px] lg:w-full mx-auto"
+      />
+      <img
+        src="/images/antenna.jpg"
+        alt=""
+        class="block lg:hidden absolute bottom-1/8 min-w-[125px] right-0 w-1/5 object-cover"
+      />
+      <img
+        src="/images/token4.png"
+        alt=""
+        class="block w-[160px] absolute top-[20%] left-[5%] pointer-events-none"
+      />
+      <img
+        src="/images/token13.png"
+        alt=""
+        class="block w-[100px] absolute bottom-[15%] left-[3%] pointer-events-none"
+      />
     </section>
 
     <!-- Schedule -->
-    <div class="hidden lg:block relative lg:col-start-1 pointer-events-none"></div>
+    <div class="hidden lg:block relative lg:col-start-1 pointer-events-none">
+    </div>
     <section id="schedule" class="relative lg:col-start-2 p-6">
-      <img src="/images/dragon-red-with-moon.png" alt="" class="absolute left-1/2 lg:left-[-5%] -translate-x-1/2 w-full max-w-[550px] -z-10">
-      <img src="/images/token12.png" alt="" class="block w-[120px] absolute top-[20%] left-[-75%]">
-      <img src="/images/token5.png" alt="" class="block w-[120px] absolute top-[40%] left-[-30%]">
-      <img src="/images/token2.png" alt="" class="block w-[120px] absolute top-[60%] left-[-80%]">
+      <img
+        src="/images/dragon-red-with-moon.png"
+        alt=""
+        class="absolute left-1/2 lg:left-[-5%] -translate-x-1/2 w-full max-w-[550px] -z-10"
+      />
+      <img
+        src="/images/token12.png"
+        alt=""
+        class="block w-[120px] absolute top-[20%] left-[-75%]"
+      />
+      <img
+        src="/images/token5.png"
+        alt=""
+        class="block w-[120px] absolute top-[40%] left-[-30%]"
+      />
+      <img
+        src="/images/token2.png"
+        alt=""
+        class="block w-[120px] absolute top-[60%] left-[-80%]"
+      />
       <div class="relative z-10 text-black flex flex-col items-center w-full">
         <div class="font-p w-full max-w-[540px] mx-auto">
-          {Object.keys(days).length === 0 ? (
-            <p>No upcoming shows.</p>
-          ) : (
-            Object.entries(days).map(([day, dayShows], i) => (
-              <div class="mb-16 space-y-2">
-                <div class="mb-4 text-center">
-                  <h3 class="font-serif font-h1 inline-block">{day}</h3>
-                  <div class="flex justify-center" set:html={underlineSVGs[i % underlineSVGs.length]} />
-                </div>
-                {dayShows.map((show) => (
-                  <div class="grid grid-cols-[6rem_1fr] gap-4">
-                    <div class="pt-0.5">{formatTimeRange(show.start, show.end)}</div>
-                    <div>
-                      <div class="font-h2">{show.title}</div>
-                      {show.artists?.[0]?.name && <div class="mt-0.5">{show.artists[0].name}</div>}
-                    </div>
+          {
+            Object.keys(days).length === 0 ? (
+              <p>No upcoming shows.</p>
+            ) : (
+              Object.entries(days).map(([day, dayShows], i) => (
+                <div class="mb-16 space-y-2">
+                  <div class="mb-4 text-center">
+                    <h3 class="font-serif font-h1 inline-block">{day}</h3>
+                    <div
+                      class="flex justify-center"
+                      set:html={underlineSVGs[i % underlineSVGs.length]}
+                    />
                   </div>
-                ))}
-              </div>
-            ))
-          )}
+                  {dayShows.map((show) => (
+                    <div class="grid grid-cols-[6rem_1fr] gap-4">
+                      <div class="pt-0.5">
+                        {formatTimeRange(show.start, show.end)}
+                      </div>
+                      <div>
+                        <div class="font-h2">{show.title}</div>
+                        {show.artists?.[0]?.name && (
+                          <div class="mt-0.5">{show.artists[0].name}</div>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ))
+            )
+          }
         </div>
       </div>
     </section>
 
     <!-- About -->
-    <div class="hidden lg:block relative lg:col-start-1 pointer-events-none"></div>
+    <div class="hidden lg:block relative lg:col-start-1 pointer-events-none">
+    </div>
     <section id="about" class="relative lg:col-start-2 text-center p-6">
-      <img src="/images/dragon-blue-with-moon.png" alt="" class="absolute left-1/2 lg:left-[-10%] -translate-x-1/2 w-full max-w-[650px] -z-10">
-      <img src="/images/token7.png" alt="" class="block w-[120px] absolute top-[-150px] right-[8%]">
+      <img
+        src="/images/dragon-blue-with-moon.png"
+        alt=""
+        class="absolute left-1/2 lg:left-[-10%] -translate-x-1/2 w-full max-w-[650px] -z-10"
+      />
+      <img
+        src="/images/token7.png"
+        alt=""
+        class="block w-[120px] absolute top-[-150px] right-[8%]"
+      />
       <div class="relative z-10 text-center">
         <h3 class="font-h0 font-serif">Seyðisfjörður Community Radio</h3>
-        <svg width="577" height="16" viewBox="0 0 577 16" fill="none" xmlns="http://www.w3.org/2000/svg" class="mx-auto max-w-full" aria-hidden="true">
-          <path d="M0.5 7.17754C0.533027 7.17754 0.566054 7.17754 14.5413 7.17754C28.5166 7.17754 56.4332 7.17754 69.3307 7.17754C82.2281 7.17754 79.2606 7.17754 89.7941 7.17754C100.328 7.17754 124.452 7.17754 136.189 7.05582C147.927 6.93411 146.546 6.69069 140.929 6.41911C135.311 6.14754 125.5 5.85519 126.019 5.70458C126.538 5.55398 137.686 5.55398 139.462 5.5974C141.239 5.64082 133.308 5.72767 128.383 5.86783C123.459 6.00798 121.782 6.1988 128.36 6.76377C134.938 7.32873 149.823 8.26206 156.724 9.0028C163.626 9.74354 162.095 10.2634 158.986 11.089C155.877 11.9146 151.238 13.0302 154.927 13.4306C170.683 15.1405 190.928 12.0223 200.531 10.3817C202.551 10.0366 198.606 9.89718 196.037 10.0002C193.468 10.1031 192.35 10.2524 207.724 9.84423C223.098 9.4361 254.999 8.46608 263.339 7.96637C271.679 7.46666 255.492 7.46666 262.134 6.42936C268.777 5.39206 298.738 3.31747 313.482 2.22121C328.225 1.12496 326.841 1.06991 325.313 1.16571C323.784 1.26151 322.152 1.50983 320.314 2.02918C318.476 2.54854 316.481 3.3314 333.779 3.05642C351.077 2.78143 387.729 1.42487 403.42 0.729093C412.746 0.315513 404.066 0.468972 415.67 1.13226C429.344 1.91389 458.906 1.41634 471.375 2.44942C478.958 3.07768 473.502 8.1076 487.435 9.88736C500.496 11.5559 525.908 13.1215 536.254 14.1399C546.599 15.1582 541.154 15.1582 544.941 14.3857C548.728 13.6132 561.912 12.0683 576.234 10.2727" stroke="#22A1EC" stroke-linecap="round" />
+        <svg
+          width="577"
+          height="16"
+          viewBox="0 0 577 16"
+          fill="none"
+          xmlns="http://www.w3.org/2000/svg"
+          class="mx-auto max-w-full"
+          aria-hidden="true"
+        >
+          <path
+            d="M0.5 7.17754C0.533027 7.17754 0.566054 7.17754 14.5413 7.17754C28.5166 7.17754 56.4332 7.17754 69.3307 7.17754C82.2281 7.17754 79.2606 7.17754 89.7941 7.17754C100.328 7.17754 124.452 7.17754 136.189 7.05582C147.927 6.93411 146.546 6.69069 140.929 6.41911C135.311 6.14754 125.5 5.85519 126.019 5.70458C126.538 5.55398 137.686 5.55398 139.462 5.5974C141.239 5.64082 133.308 5.72767 128.383 5.86783C123.459 6.00798 121.782 6.1988 128.36 6.76377C134.938 7.32873 149.823 8.26206 156.724 9.0028C163.626 9.74354 162.095 10.2634 158.986 11.089C155.877 11.9146 151.238 13.0302 154.927 13.4306C170.683 15.1405 190.928 12.0223 200.531 10.3817C202.551 10.0366 198.606 9.89718 196.037 10.0002C193.468 10.1031 192.35 10.2524 207.724 9.84423C223.098 9.4361 254.999 8.46608 263.339 7.96637C271.679 7.46666 255.492 7.46666 262.134 6.42936C268.777 5.39206 298.738 3.31747 313.482 2.22121C328.225 1.12496 326.841 1.06991 325.313 1.16571C323.784 1.26151 322.152 1.50983 320.314 2.02918C318.476 2.54854 316.481 3.3314 333.779 3.05642C351.077 2.78143 387.729 1.42487 403.42 0.729093C412.746 0.315513 404.066 0.468972 415.67 1.13226C429.344 1.91389 458.906 1.41634 471.375 2.44942C478.958 3.07768 473.502 8.1076 487.435 9.88736C500.496 11.5559 525.908 13.1215 536.254 14.1399C546.599 15.1582 541.154 15.1582 544.941 14.3857C548.728 13.6132 561.912 12.0683 576.234 10.2727"
+            stroke="#22A1EC"
+            stroke-linecap="round"></path>
         </svg>
         <div class="font-p mt-4 max-w-[540px] mx-auto text-center prose">
           <AboutContent />
@@ -163,109 +248,246 @@ const underlineSVGs = [
     </section>
 
     <!-- Newsletter -->
-    <div class="hidden lg:block relative lg:col-start-1 pointer-events-none"></div>
+    <div class="hidden lg:block relative lg:col-start-1 pointer-events-none">
+    </div>
     <section id="newsletter" class="relative lg:col-start-2 p-6">
-      <img src="/images/dragon-yellow-with-moon.png" alt="" class="absolute left-1/2 lg:left-0 -translate-x-1/2 w-full max-w-[440px] -z-10 pointer-events-none">
-      <img src="/images/token11.png" alt="" class="block w-[120px] absolute top-[-120px] left-[5%] pointer-events-none">
+      <img
+        src="/images/dragon-yellow-with-moon.png"
+        alt=""
+        class="absolute left-1/2 lg:left-0 -translate-x-1/2 w-full max-w-[440px] -z-10 pointer-events-none"
+      />
+      <img
+        src="/images/token11.png"
+        alt=""
+        class="block w-[120px] absolute top-[-120px] left-[5%] pointer-events-none"
+      />
       <div class="relative z-10 text-center mb-6">
         <h3 class="font-h0 font-serif">Newsletter</h3>
-        <svg width="224" height="10" viewBox="0 0 224 10" fill="none" xmlns="http://www.w3.org/2000/svg" class="mx-auto" aria-hidden="true">
-          <path d="M0.223182 3.23683C0.111258 3.23683 14.5257 3.23683 26.6901 3.07689C29.0031 3.04648 4.85651 2.59707 8.30391 3.57018C11.7513 4.54329 38.7638 6.81908 51.7369 7.99146C64.7101 9.16384 62.8253 9.16384 53.2331 8.37968C43.6409 7.59552 26.3983 6.0272 32.8477 5.21927C39.297 4.41135 69.9609 4.41135 82.2577 4.75956C94.5545 5.10777 87.5551 5.80418 83.5483 6.25587C79.5414 6.70756 78.7393 6.89341 93.1816 7.30557C107.624 7.71774 137.335 8.3506 141.971 7.82475C146.608 7.2989 125.269 5.59516 130.078 4.74718C134.887 3.89921 166.49 3.95862 173.506 3.25274C180.522 2.54686 161.993 1.07388 156.809 0.635301C151.624 0.196721 160.345 0.837178 173.568 2.37064C186.792 3.90411 204.254 6.31117 223.467 8.8498" stroke="#F8AA2E" stroke-linecap="round" />
+        <svg
+          width="224"
+          height="10"
+          viewBox="0 0 224 10"
+          fill="none"
+          xmlns="http://www.w3.org/2000/svg"
+          class="mx-auto"
+          aria-hidden="true"
+        >
+          <path
+            d="M0.223182 3.23683C0.111258 3.23683 14.5257 3.23683 26.6901 3.07689C29.0031 3.04648 4.85651 2.59707 8.30391 3.57018C11.7513 4.54329 38.7638 6.81908 51.7369 7.99146C64.7101 9.16384 62.8253 9.16384 53.2331 8.37968C43.6409 7.59552 26.3983 6.0272 32.8477 5.21927C39.297 4.41135 69.9609 4.41135 82.2577 4.75956C94.5545 5.10777 87.5551 5.80418 83.5483 6.25587C79.5414 6.70756 78.7393 6.89341 93.1816 7.30557C107.624 7.71774 137.335 8.3506 141.971 7.82475C146.608 7.2989 125.269 5.59516 130.078 4.74718C134.887 3.89921 166.49 3.95862 173.506 3.25274C180.522 2.54686 161.993 1.07388 156.809 0.635301C151.624 0.196721 160.345 0.837178 173.568 2.37064C186.792 3.90411 204.254 6.31117 223.467 8.8498"
+            stroke="#F8AA2E"
+            stroke-linecap="round"></path>
         </svg>
-        <p class="my-4">Follow us, our open calls, our content and community here</p>
+        <p class="my-4">
+          Follow us, our open calls, our content and community here
+        </p>
         <form id="newsletter-form" class="flex gap-2 mx-auto max-w-sm">
           <label for="newsletter-email" class="sr-only">Email address</label>
-          <input type="email" name="email" id="newsletter-email" placeholder="Your email" required
-            class="flex-1 bg-transparent border-b border-current py-1.5 outline-none" />
-          <button type="submit" id="submit-btn"
-            class="py-1.5 text-[#1100FF] bg-transparent cursor-pointer whitespace-nowrap disabled:opacity-40">Subscribe</button>
+          <input
+            type="email"
+            name="email"
+            id="newsletter-email"
+            placeholder="Your email"
+            required
+            class="flex-1 bg-transparent border-b border-current py-1.5 outline-none"
+          />
+          <button
+            type="submit"
+            id="submit-btn"
+            class="py-1.5 text-[#1100FF] bg-transparent cursor-pointer whitespace-nowrap disabled:opacity-40"
+            >Subscribe</button
+          >
         </form>
         <div id="newsletter-message" class="mt-2 text-sm opacity-70"></div>
-        {newsletter && (
-          <div class="font-p mt-4 max-w-[540px] mx-auto text-center prose" set:html={textToHtml(newsletter)} />
-        )}
+        {
+          newsletter && (
+            <div
+              class="font-p mt-4 max-w-[540px] mx-auto text-center prose"
+              set:html={newsletterHtml}
+            />
+          )
+        }
       </div>
     </section>
 
     <!-- Archive -->
-    <div class="hidden lg:block relative lg:col-start-1 pointer-events-none"></div>
+    <div class="hidden lg:block relative lg:col-start-1 pointer-events-none">
+    </div>
     <section id="archive" class="relative lg:col-start-2 p-6">
       <div class="relative z-10 text-center">
         <h3 class="font-h0 font-serif">Archive</h3>
-        <svg width="181" height="11" viewBox="0 0 181 11" fill="none" xmlns="http://www.w3.org/2000/svg" class="mx-auto">
-          <path d="M0.5 10.2838C7.93549 10.2838 16.0009 10.2838 20.392 10.1776C29.4099 9.95929 52.2208 9.85871 60.7232 9.82621C69.2256 9.7937 62.7303 9.94771 72.4492 9.90124C82.168 9.85476 108.298 9.60315 117.943 9.47353C119.96 9.44643 131.313 8.20407 154.419 6.47702C158.339 6.18406 146.276 5.88983 143.593 5.71467C140.91 5.53952 147.937 5.18921 155.661 4.31465C163.385 3.44008 171.592 2.05188 180.284 0.5" stroke="#FC7887" stroke-linecap="round" />
+        <svg
+          width="181"
+          height="11"
+          viewBox="0 0 181 11"
+          fill="none"
+          xmlns="http://www.w3.org/2000/svg"
+          class="mx-auto"
+        >
+          <path
+            d="M0.5 10.2838C7.93549 10.2838 16.0009 10.2838 20.392 10.1776C29.4099 9.95929 52.2208 9.85871 60.7232 9.82621C69.2256 9.7937 62.7303 9.94771 72.4492 9.90124C82.168 9.85476 108.298 9.60315 117.943 9.47353C119.96 9.44643 131.313 8.20407 154.419 6.47702C158.339 6.18406 146.276 5.88983 143.593 5.71467C140.91 5.53952 147.937 5.18921 155.661 4.31465C163.385 3.44008 171.592 2.05188 180.284 0.5"
+            stroke="#FC7887"
+            stroke-linecap="round"></path>
         </svg>
-        {archive && (
-          <div class="font-p mt-4 max-w-[540px] mx-auto text-center prose" set:html={textToHtml(archive)} />
-        )}
+        {
+          archive && (
+            <div
+              class="font-p mt-4 max-w-[540px] mx-auto text-center prose"
+              set:html={archiveHtml}
+            />
+          )
+        }
         <h4 class="font-h0 font-serif mt-10">Recently Aired</h4>
-        <svg width="331" height="16" viewBox="0 0 331 16" fill="none" xmlns="http://www.w3.org/2000/svg" class="mx-auto">
-          <path d="M0.00256752 14.3948C-0.031191 14.3948 -0.064949 14.3948 23.2458 14.3948C46.5566 14.3948 93.2129 14.3948 109.044 14.3948C124.874 14.3948 108.466 14.3948 118.822 13.4342C129.179 12.4735 166.798 10.5523 182.675 9.74921C191.546 9.3005 168.542 13.0293 156.303 14.9791C152.544 15.578 183.217 7.42689 194.536 4.38091C205.855 1.33494 204.42 1.60699 197.72 3.85854C191.02 6.11009 179.099 10.3329 173.443 12.5803C167.787 14.8276 168.758 14.9716 188.904 14.2877C209.051 13.6038 248.344 12.0876 263.58 12.3476C278.815 12.6076 268.803 14.6897 276.268 13.8252C283.733 12.9606 308.978 9.08635 320.809 6.881C332.64 4.67565 330.292 4.25665 327.13 4.06463C320.063 3.92027 314.756 4.28015 314.803 4.02323C316.132 3.45553 320.113 1.99994 324.214 0.500244" stroke="#FC7887" stroke-linecap="round" />
+        <svg
+          width="331"
+          height="16"
+          viewBox="0 0 331 16"
+          fill="none"
+          xmlns="http://www.w3.org/2000/svg"
+          class="mx-auto"
+        >
+          <path
+            d="M0.00256752 14.3948C-0.031191 14.3948 -0.064949 14.3948 23.2458 14.3948C46.5566 14.3948 93.2129 14.3948 109.044 14.3948C124.874 14.3948 108.466 14.3948 118.822 13.4342C129.179 12.4735 166.798 10.5523 182.675 9.74921C191.546 9.3005 168.542 13.0293 156.303 14.9791C152.544 15.578 183.217 7.42689 194.536 4.38091C205.855 1.33494 204.42 1.60699 197.72 3.85854C191.02 6.11009 179.099 10.3329 173.443 12.5803C167.787 14.8276 168.758 14.9716 188.904 14.2877C209.051 13.6038 248.344 12.0876 263.58 12.3476C278.815 12.6076 268.803 14.6897 276.268 13.8252C283.733 12.9606 308.978 9.08635 320.809 6.881C332.64 4.67565 330.292 4.25665 327.13 4.06463C320.063 3.92027 314.756 4.28015 314.803 4.02323C316.132 3.45553 320.113 1.99994 324.214 0.500244"
+            stroke="#FC7887"
+            stroke-linecap="round"></path>
         </svg>
         <div class="mt-6 font-p text-left max-w-[650px] mx-auto">
-          {tracks.length === 0 ? (
-            <p>No recent shows.</p>
-          ) : (
-            tracks.map((track, i) => (
-              <div id={`archive-row-${i}`} class="py-3">
-                <div class="flex items-center gap-3">
-                  <button
-                    data-index={i}
-                    data-stream={track.stream}
-                    onclick="archiveToggle(this)"
-                    class="shrink-0 bg-transparent border-none cursor-pointer p-0"
-                    aria-label={`Play ${track.title}`}>
-                    <svg class={`icon-play-${i}`} width="30" height="30" viewBox="0 0 50 50" fill="none" xmlns="http://www.w3.org/2000/svg">
-                      <path d="M0.499998 49.1914L0.5 0.808593L48.8818 25L0.499998 49.1914Z" stroke="currentColor" />
-                    </svg>
-                    <svg class={`icon-pause-${i}`} width="20" height="20" viewBox="0 0 50 50" fill="none" xmlns="http://www.w3.org/2000/svg" style="display:none;">
-                      <rect x="6" y="4" width="12" height="42" stroke="currentColor" />
-                      <rect x="32" y="4" width="12" height="42" stroke="currentColor" />
-                    </svg>
-                  </button>
-                  <span class={`flex-1 font-h2 archive-title-${i}`}>{track.title}</span>
-                  <span class="shrink-0">{track.date}</span>
-                  <a href={track.url} target="_blank" rel="noopener" aria-label="Listen on SoundCloud" class="shrink-0">
-                    <img src="/soundcloud-logo.png" alt="SoundCloud" width="20">
-                  </a>
-                </div>
-                <div id={`archive-scrubber-${i}`} style="display:none;" class="mt-2 pl-9">
-                  <label for={`scrubber-${i}`} class="sr-only">Playback position for {track.title}</label>
-                  <input type="range" min="0" max="100" value="0" step="0.1"
-                    class="w-full h-1 cursor-pointer" style="accent-color: #f51b22;"
-                    oninput="archiveSeek(this.value)"
-                    id={`scrubber-${i}`}>
-                  <div class="flex justify-between text-xs opacity-50 mt-0.5">
-                    <span id={`scrubber-current-${i}`}>0:00</span>
-                    <span id={`scrubber-duration-${i}`}>0:00</span>
+          {
+            tracks.length === 0 ? (
+              <p>No recent shows.</p>
+            ) : (
+              tracks.map((track, i) => (
+                <div id={`archive-row-${i}`} class="py-3">
+                  <div class="flex items-center gap-3">
+                    <button
+                      data-index={i}
+                      data-stream={track.stream}
+                      onclick="archiveToggle(this)"
+                      class="shrink-0 bg-transparent border-none cursor-pointer p-0"
+                      aria-label={`Play ${track.title}`}
+                    >
+                      <svg
+                        class={`icon-play-${i}`}
+                        width="30"
+                        height="30"
+                        viewBox="0 0 50 50"
+                        fill="none"
+                        xmlns="http://www.w3.org/2000/svg"
+                      >
+                        <path
+                          d="M0.499998 49.1914L0.5 0.808593L48.8818 25L0.499998 49.1914Z"
+                          stroke="currentColor"
+                        />
+                      </svg>
+                      <svg
+                        class={`icon-pause-${i}`}
+                        width="20"
+                        height="20"
+                        viewBox="0 0 50 50"
+                        fill="none"
+                        xmlns="http://www.w3.org/2000/svg"
+                        style="display:none;"
+                      >
+                        <rect
+                          x="6"
+                          y="4"
+                          width="12"
+                          height="42"
+                          stroke="currentColor"
+                        />
+                        <rect
+                          x="32"
+                          y="4"
+                          width="12"
+                          height="42"
+                          stroke="currentColor"
+                        />
+                      </svg>
+                    </button>
+                    <span class={`flex-1 font-h2 archive-title-${i}`}>
+                      {track.title}
+                    </span>
+                    <span class="shrink-0">{track.date}</span>
+                    <a
+                      href={track.url}
+                      target="_blank"
+                      rel="noopener"
+                      aria-label="Listen on SoundCloud"
+                      class="shrink-0"
+                    >
+                      <img
+                        src="/soundcloud-logo.png"
+                        alt="SoundCloud"
+                        width="20"
+                      />
+                    </a>
+                  </div>
+                  <div
+                    id={`archive-scrubber-${i}`}
+                    style="display:none;"
+                    class="mt-2 pl-9"
+                  >
+                    <label for={`scrubber-${i}`} class="sr-only">
+                      Playback position for {track.title}
+                    </label>
+                    <input
+                      type="range"
+                      min="0"
+                      max="100"
+                      value="0"
+                      step="0.1"
+                      class="w-full h-1 cursor-pointer"
+                      style="accent-color: #f51b22;"
+                      oninput="archiveSeek(this.value)"
+                      id={`scrubber-${i}`}
+                    />
+                    <div class="flex justify-between text-xs opacity-50 mt-0.5">
+                      <span id={`scrubber-current-${i}`}>0:00</span>
+                      <span id={`scrubber-duration-${i}`}>0:00</span>
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))
-          )}
+              ))
+            )
+          }
         </div>
-        <audio id="archive-audio" preload="none" aria-label="Archive audio player"></audio>
+        <audio
+          id="archive-audio"
+          preload="none"
+          aria-label="Archive audio player"></audio>
       </div>
-      <img src="/images/token6.png" alt="" class="block w-[200px] absolute top-[5%] left-[-20%]">
-      <img src="/images/token8.png" alt="" class="block w-[80px] absolute top-[70%] left-[-85%]">
+      <img
+        src="/images/token6.png"
+        alt=""
+        class="block w-[200px] absolute top-[5%] left-[-20%]"
+      />
+      <img
+        src="/images/token8.png"
+        alt=""
+        class="block w-[80px] absolute top-[70%] left-[-85%]"
+      />
     </section>
 
     <!-- Footer -->
-    <div class="hidden lg:block relative lg:col-start-1 pointer-events-none"></div>
+    <div class="hidden lg:block relative lg:col-start-1 pointer-events-none">
+    </div>
     <section id="footer" class="lg:col-start-2 p-6 mb-30 lg:mb-0">
-      <div class="font-p mt-4 text-center">{footer}</div>
+      <div
+        class="font-p mt-4 text-center prose mx-auto"
+        set:html={footerHtml}
+      />
     </section>
-
   </div>
 </MainLayout>
 
 <script is:inline>
   // --- Archive player ---
-  const archiveAudio = document.getElementById('archive-audio');
+  const archiveAudio = document.getElementById("archive-audio");
   let currentArchiveIndex = null;
 
   function fmtTime(s) {
-    return Math.floor(s / 60) + ':' + String(Math.floor(s % 60)).padStart(2, '0');
+    return (
+      Math.floor(s / 60) + ":" + String(Math.floor(s % 60)).padStart(2, "0")
+    );
   }
 
   function archiveToggle(btn) {
@@ -273,78 +495,102 @@ const underlineSVGs = [
     if (currentArchiveIndex === index && !archiveAudio.paused) {
       archiveAudio.pause();
     } else if (currentArchiveIndex === index && archiveAudio.paused) {
-      window.dispatchEvent(new CustomEvent('archive-play'));
+      window.dispatchEvent(new CustomEvent("archive-play"));
       archiveAudio.play();
     } else {
       if (currentArchiveIndex !== null) archiveSetPaused(currentArchiveIndex);
       currentArchiveIndex = index;
       archiveAudio.src = btn.dataset.stream;
-      window.dispatchEvent(new CustomEvent('archive-play'));
+      window.dispatchEvent(new CustomEvent("archive-play"));
       archiveAudio.play();
       archiveAttachScrubber(index);
     }
   }
 
   function archiveAttachScrubber(index) {
-    document.getElementById(`archive-scrubber-${index}`).style.display = '';
-    archiveAudio.addEventListener('timeupdate', function onTime() {
-      if (currentArchiveIndex !== index) { archiveAudio.removeEventListener('timeupdate', onTime); return; }
+    document.getElementById(`archive-scrubber-${index}`).style.display = "";
+    archiveAudio.addEventListener("timeupdate", function onTime() {
+      if (currentArchiveIndex !== index) {
+        archiveAudio.removeEventListener("timeupdate", onTime);
+        return;
+      }
       const scrubber = document.getElementById(`scrubber-${index}`);
       if (!archiveAudio.duration || isNaN(archiveAudio.duration)) return;
       scrubber.value = (archiveAudio.currentTime / archiveAudio.duration) * 100;
-      document.getElementById(`scrubber-current-${index}`).textContent  = fmtTime(archiveAudio.currentTime);
-      document.getElementById(`scrubber-duration-${index}`).textContent = fmtTime(archiveAudio.duration);
+      document.getElementById(`scrubber-current-${index}`).textContent =
+        fmtTime(archiveAudio.currentTime);
+      document.getElementById(`scrubber-duration-${index}`).textContent =
+        fmtTime(archiveAudio.duration);
     });
-    archiveAudio.addEventListener('play', function onPlay() {
-      if (currentArchiveIndex !== index) { archiveAudio.removeEventListener('play', onPlay); return; }
+    archiveAudio.addEventListener("play", function onPlay() {
+      if (currentArchiveIndex !== index) {
+        archiveAudio.removeEventListener("play", onPlay);
+        return;
+      }
       archiveSetPlaying(index);
     });
-    archiveAudio.addEventListener('pause', function onPause() {
-      if (currentArchiveIndex !== index) { archiveAudio.removeEventListener('pause', onPause); return; }
+    archiveAudio.addEventListener("pause", function onPause() {
+      if (currentArchiveIndex !== index) {
+        archiveAudio.removeEventListener("pause", onPause);
+        return;
+      }
       archiveSetPaused(index);
     });
   }
 
   function archiveSeek(value) {
-    if (archiveAudio.duration) archiveAudio.currentTime = (value / 100) * archiveAudio.duration;
+    if (archiveAudio.duration)
+      archiveAudio.currentTime = (value / 100) * archiveAudio.duration;
   }
 
   function archiveSetPlaying(index) {
-    document.querySelector(`.icon-play-${index}`).style.display  = 'none';
-    document.querySelector(`.icon-pause-${index}`).style.display = '';
-    document.querySelector(`.archive-title-${index}`).style.color = '#f51b22';
+    document.querySelector(`.icon-play-${index}`).style.display = "none";
+    document.querySelector(`.icon-pause-${index}`).style.display = "";
+    document.querySelector(`.archive-title-${index}`).style.color = "#f51b22";
   }
 
   function archiveSetPaused(index) {
-    document.querySelector(`.icon-play-${index}`).style.display  = '';
-    document.querySelector(`.icon-pause-${index}`).style.display = 'none';
-    document.getElementById(`archive-scrubber-${index}`).style.display = 'none';
-    document.querySelector(`.archive-title-${index}`).style.color = '';
+    document.querySelector(`.icon-play-${index}`).style.display = "";
+    document.querySelector(`.icon-pause-${index}`).style.display = "none";
+    document.getElementById(`archive-scrubber-${index}`).style.display = "none";
+    document.querySelector(`.archive-title-${index}`).style.color = "";
     currentArchiveIndex = null;
   }
 
   // --- Newsletter ---
-  (function() {
-    const form    = document.getElementById('newsletter-form');
-    const btn     = document.getElementById('submit-btn');
-    const message = document.getElementById('newsletter-message');
-    const publicationId = ''; // TODO: add your beehiiv publication ID
+  (function () {
+    const form = document.getElementById("newsletter-form");
+    const btn = document.getElementById("submit-btn");
+    const message = document.getElementById("newsletter-message");
+    const publicationId = ""; // TODO: add your beehiiv publication ID
 
-    form.addEventListener('submit', async (e) => {
+    form.addEventListener("submit", async (e) => {
       e.preventDefault();
-      btn.disabled = true; btn.textContent = '...'; message.textContent = '';
+      btn.disabled = true;
+      btn.textContent = "...";
+      message.textContent = "";
       const email = form.querySelector('input[type="email"]').value;
       try {
-        const res = await fetch(`https://api.beehiiv.com/v2/publications/${publicationId}/subscriptions`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email, reactivate_existing: true, send_welcome_email: true })
-        });
-        if (res.ok) { form.style.display = 'none'; message.textContent = "You're subscribed!"; }
-        else throw new Error();
+        const res = await fetch(
+          `https://api.beehiiv.com/v2/publications/${publicationId}/subscriptions`,
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              email,
+              reactivate_existing: true,
+              send_welcome_email: true,
+            }),
+          },
+        );
+        if (res.ok) {
+          form.style.display = "none";
+          message.textContent = "You're subscribed!";
+        } else throw new Error();
       } catch {
-        message.textContent = 'Something went wrong. Please try again.';
-        btn.disabled = false; btn.textContent = 'Subscribe';
+        message.textContent = "Something went wrong. Please try again.";
+        btn.disabled = false;
+        btn.textContent = "Subscribe";
       }
     });
   })();
