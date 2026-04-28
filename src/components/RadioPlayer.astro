@@ -4,69 +4,144 @@
 // Requires SuperMarquee loaded as a global (CDN script in the layout head).
 ---
 
-<radio-player class="block fixed top-0 lg:top-4 right-6 max-w-[390px] lg:max-w-none lg:left-[50vw] z-20">
+<radio-player
+  class="block fixed top-0 lg:top-4 right-6 max-w-[390px] lg:max-w-none lg:left-[50vw] z-20"
+>
   <div class="flex items-center gap-6">
     <div class="flex-1 flex items-center justify-center gap-2">
       <div class="live-dot shrink-0 mr-4"></div>
-      <div id="show-title-marquee" class="backslanted font-h1 w-[240px] lg:w-[350px] h-[3rem] lg:mt-5 mt-7"></div>
+      <div
+        id="show-title-marquee"
+        class="backslanted font-h1 w-[240px] lg:w-[350px] h-[3rem] lg:mt-5 mt-7"
+      >
+      </div>
     </div>
-    <button id="play-radio-btn" aria-label="Play live radio"
-      class="flex items-center justify-center shrink-0 w-[30px] h-[30px] lg:w-[50px] lg:h-[50px] bg-transparent border-none cursor-pointer p-0 ml-auto">
+    <button
+      id="play-radio-btn"
+      aria-label="Play live radio"
+      class="flex items-center justify-center shrink-0 w-[30px] h-[30px] lg:w-[50px] lg:h-[50px] bg-transparent border-none cursor-pointer p-0 ml-auto"
+    >
       <span id="icon-play" aria-hidden="true">
-        <svg class="w-[30px] h-[30px] lg:w-[50px] lg:h-[50px]" viewBox="0 0 50 50" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M0.499998 49.1914L0.5 0.808593L48.8818 25L0.499998 49.1914Z" stroke="currentColor" />
+        <svg
+          class="w-[30px] h-[30px] lg:w-[50px] lg:h-[50px]"
+          viewBox="0 0 50 50"
+          fill="none"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <path
+            d="M0.499998 49.1914L0.5 0.808593L48.8818 25L0.499998 49.1914Z"
+            stroke="currentColor"></path>
         </svg>
       </span>
       <span id="icon-stop" aria-hidden="true" style="display:none;">
-        <svg class="w-[30px] h-[30px] lg:w-[40px] lg:h-[40px]" viewBox="0 0 50 50" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <rect x="0.5" y="0.5" width="48.9248" height="48.9248" stroke="currentColor" />
+        <svg
+          class="w-[30px] h-[30px] lg:w-[40px] lg:h-[40px]"
+          viewBox="0 0 50 50"
+          fill="none"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <rect
+            x="0.5"
+            y="0.5"
+            width="48.9248"
+            height="48.9248"
+            stroke="currentColor"></rect>
         </svg>
       </span>
       <span id="icon-loading" aria-hidden="true" style="display:none;">
         <div id="loading-svg"></div>
       </span>
     </button>
-    <audio id="radio-audio" src="https://seyisfjorur-community-radio.radiocult.fm/stream" preload="none" aria-label="Live radio stream"></audio>
+    <audio
+      id="radio-audio"
+      src="https://seyisfjorur-community-radio.radiocult.fm/stream"
+      preload="none"
+      aria-label="Live radio stream"></audio>
   </div>
 </radio-player>
 
 <script is:inline>
   class RadioPlayer extends HTMLElement {
     connectedCallback() {
-      const playBtn        = this.querySelector('#play-radio-btn');
-      const audio          = this.querySelector('#radio-audio');
-      const iconPlay       = this.querySelector('#icon-play');
-      const iconStop       = this.querySelector('#icon-stop');
-      const iconLoad       = this.querySelector('#icon-loading');
-      const loadingSvg     = this.querySelector('#loading-svg');
-      const titleContainer = this.querySelector('#show-title-marquee');
+      const playBtn = this.querySelector("#play-radio-btn");
+      const audio = this.querySelector("#radio-audio");
+      const iconPlay = this.querySelector("#icon-play");
+      const iconStop = this.querySelector("#icon-stop");
+      const iconLoad = this.querySelector("#icon-loading");
+      const loadingSvg = this.querySelector("#loading-svg");
+      const titleContainer = this.querySelector("#show-title-marquee");
 
       const loadingSVGs = [
         `<svg width="43" height="38" viewBox="0 0 43 38" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M31.803 19.8048C25.7429 19.8906 12.7702 19.5224 11.7457 18.1596C11.1353 17.3478 11.3673 15.7295 11.3808 16.2437C11.5974 24.4759 9.27949 32.3902 7.50783 36.1932C6.99403 37.296 6.77252 36.4569 6.90998 35.6255C7.19926 33.8759 8.63696 32.009 11.0839 29.3993C14.818 25.4169 20.8368 21.6209 26.2768 18.5094C29.3879 16.73 20.4738 20.3512 5.62094 26.2316C0.789043 28.1446 1.68943 28.4625 5.65282 28.5522C9.61621 28.6419 16.6766 28.6419 18.9088 28.3282C20.0024 28.1745 13.7589 25.8911 11.0339 24.3992C9.48725 23.5524 9.02784 21.9952 8.76955 20.3143C8.65511 19.5696 8.85499 19.0147 9.20715 18.4166C9.98722 17.0918 13.0687 15.0902 18.9655 11.8599C26.9254 7.49949 32.2724 5.3866 31.7134 4.28454C30.2746 1.44783 23.08 1.48471 16.6906 0.672095C14.0554 0.336943 12.6261 0.388945 14.7837 1.7725C22.3265 6.60942 31.1765 10.4894 35.61 13.691C39.0423 16.1696 40.785 18.5753 41.7422 20.1643C42.1532 20.8465 42.1629 21.4122 41.6616 21.9043C38.5761 24.9329 32.1111 25.2833 29.6037 27.3885C29.1824 27.7422 29.3857 28.3967 29.6378 28.8937C30.1984 29.9994 31.4892 30.717 31.9962 31.1399C37.1681 35.4543 15.0994 25.1802 14.0343 25.0717C12.9131 25.2064 16.6846 29.4311 19.1703 31.9321C17.2965 30.3413 9.0573 22.9436 0.5 14.8645" stroke="#547B23" stroke-linecap="round"/></svg>`,
         `<svg width="35" height="32" viewBox="0 0 35 32" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M15.2299 20.9682C15.2299 20.9384 15.2299 20.9087 15.2299 20.0472C15.2299 19.1857 15.2299 17.4934 17.0053 17.87C18.7807 18.2467 22.3315 20.7436 26.0815 23.0665C29.8314 25.3894 33.6728 27.4627 33.685 27.5703C34.7831 37.3063 22.498 22.459 21.7279 21.9103C21.3847 21.6657 21.3385 21.2566 21.4217 20.9595C21.5927 20.349 25.2225 18.4698 30.3721 15.6028C33.0976 14.0853 33.9792 13.0871 34.1312 12.4669C34.2105 12.1431 33.4454 11.8709 30.5967 11.6989C27.748 11.5268 22.6219 11.4811 19.2288 11.576C15.8356 11.6709 14.3307 11.9078 11.3734 12.7946C8.41611 13.6814 4.05203 15.2109 1.95627 15.7077C-0.139494 16.2045 0.165299 15.6223 1.98568 13.773C3.80607 11.9236 7.13281 8.82478 9.21424 6.77918C12.1202 3.92321 13.0768 2.33556 13.3194 1.35569C13.4176 0.959155 12.886 0.729092 12.3422 0.615435C11.1315 0.362378 9.93326 0.571049 9.11327 0.803983C8.43139 0.997683 8.18685 1.94554 8.02506 2.91051C7.62666 5.28672 11.885 8.37069 16.3578 11.7474C18.6989 13.5148 21.4427 15.0361 23.711 16.2106C27.6658 18.2582 30.0571 18.8627 30.9229 18.9423C31.3146 18.9783 31.6162 18.8768 31.8355 18.6409C32.3293 18.1097 32.3483 16.9181 32.2379 15.4293C31.9619 11.7072 28.5962 9.0979 23.7574 5.734C20.9552 3.78594 17.825 3.31714 15.4642 3.09359C11.9392 2.75981 8.62222 4.9101 6.04521 7.41166C4.82758 8.59364 4.46973 10.4847 4.02848 12.6214C3.42212 15.5576 4.48997 18.7131 5.90801 20.9372C7.63785 23.6504 12.9773 23.3586 16.2978 22.8839C19.2148 22.4668 19.7601 18.5285 19.7002 17.9529C19.6778 17.7382 19.1128 17.9668 18.7596 18.2617C17.6097 19.9792 16.6966 22.338 16.27 24.88C16.2194 25.6505 16.2066 26.6057 16.1934 27.5899" stroke="#22A1EC" stroke-linecap="round"/></svg>`,
         `<svg width="25" height="24" viewBox="0 0 25 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M9.99685 20.9725C10.3484 21.2948 16.0393 21.8645 20.5334 21.6629C21.5111 21.6191 22.4994 20.2118 23.5142 18.5575C24.1345 17.5464 24.0707 15.9042 23.9527 13.8565C23.8627 12.2943 22.742 11.1178 21.5273 9.99104C20.2494 8.80571 18.4896 8.15277 16.4127 7.53089C13.6353 6.6993 10.2717 6.86399 7.14649 7.19712C4.16676 7.51474 2.60828 8.91682 2.04784 9.52412C0.563918 11.1321 0.327031 13.533 0.596123 15.4752C0.990217 18.3197 5.02707 19.5277 9.07051 21.0378C12.5064 22.321 16.2297 22.5354 18.7712 22.7852C20.4571 22.9509 15.5509 22.8701 7.13172 22.6006C4.25483 22.5086 4.2563 21.7922 4.44976 21.2988C4.85033 20.2772 7.30002 18.7343 11.8804 16.0456C14.5637 14.4705 18.1617 12.7955 19.5467 11.8213C20.9318 10.847 20.0423 10.7081 19.2011 10.652C17.597 10.545 14.501 11.186 9.76506 12.579C7.28789 13.3077 4.83998 14.6322 3.75362 15.101C2.66727 15.5698 3.06246 15.2837 3.54503 14.8173C4.63612 13.7629 5.93457 11.7208 7.39112 8.99936C10.0191 4.08922 9.65641 1.46839 9.35702 0.878486C9.10131 0.374667 7.63251 0.508437 5.95016 0.538145C2.98144 0.590568 18.6208 1.37696 18.3852 1.95039C17.9909 2.90977 13.8323 4.75157 8.84796 7.50583C7.06172 8.49288 6.71936 8.52657 5.8449 8.56026C4.97043 8.59395 3.55764 8.59603 5.64918 9.70648C7.74071 10.8169 13.3794 13.0357 19.2886 15.5158" stroke="#F8AA2E" stroke-linecap="round"/></svg>`,
-        `<svg width="24" height="27" viewBox="0 0 24 27" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M3.75567 5.2069C3.21348 5.04525 1.60622 5.03723 0.845149 5.25811C0.521395 5.35207 0.334489 5.44224 0.701578 5.43641C2.00182 5.41578 4.40702 4.60107 7.28538 3.25767C10.1404 1.9252 11.8171 0.753092 12.2796 0.505472C12.3809 0.451249 12.2658 0.744298 10.3342 3.94992C8.40262 7.15555 4.67194 13.3166 2.93912 16.4287C1.20629 19.5409 1.58438 19.4174 4.02316 17.5898C6.46195 15.7622 10.95 12.2341 13.4011 10.2823C15.8522 8.33052 16.1304 8.06197 14.8222 9.69462C13.5139 11.3273 10.6108 14.8693 8.42868 17.8539C6.24656 20.8385 4.87344 23.1583 4.13616 24.4575C3.39888 25.7567 3.33904 25.965 3.89349 25.96C4.44793 25.955 5.61846 25.7305 9.10186 24.3658C12.5853 23.001 18.3461 20.5028 21.0514 19.5398C23.7568 18.5768 23.2322 19.2246 22.6181 20.0689C22.0041 20.9132 21.3165 21.9344 20.608 22.9865" stroke="#FC7887" stroke-linecap="round"/></svg>`
+        `<svg width="24" height="27" viewBox="0 0 24 27" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M3.75567 5.2069C3.21348 5.04525 1.60622 5.03723 0.845149 5.25811C0.521395 5.35207 0.334489 5.44224 0.701578 5.43641C2.00182 5.41578 4.40702 4.60107 7.28538 3.25767C10.1404 1.9252 11.8171 0.753092 12.2796 0.505472C12.3809 0.451249 12.2658 0.744298 10.3342 3.94992C8.40262 7.15555 4.67194 13.3166 2.93912 16.4287C1.20629 19.5409 1.58438 19.4174 4.02316 17.5898C6.46195 15.7622 10.95 12.2341 13.4011 10.2823C15.8522 8.33052 16.1304 8.06197 14.8222 9.69462C13.5139 11.3273 10.6108 14.8693 8.42868 17.8539C6.24656 20.8385 4.87344 23.1583 4.13616 24.4575C3.39888 25.7567 3.33904 25.965 3.89349 25.96C4.44793 25.955 5.61846 25.7305 9.10186 24.3658C12.5853 23.001 18.3461 20.5028 21.0514 19.5398C23.7568 18.5768 23.2322 19.2246 22.6181 20.0689C22.0041 20.9132 21.3165 21.9344 20.608 22.9865" stroke="#FC7887" stroke-linecap="round"/></svg>`,
       ];
 
       const lineSVG = `<svg width="86" height="9" viewBox="0 0 86 9" fill="none" xmlns="http://www.w3.org/2000/svg" style="display:inline-block;vertical-align:middle;position:relative;top:0.4rem;margin-right:1rem;margin-left:0.4rem"><path d="M0.500122 4.70866C3.13509 3.46873 9.76979 0.583306 12.6449 0.500986C15.4759 0.419931 19.6936 5.35478 23.5495 7.86155C24.3713 8.39583 26.0439 6.38984 28.2351 4.52046C29.7385 3.23783 36.4009 3.64206 45.5137 3.46084C50.7129 3.35744 52.7244 2.798 55.5493 3.24955C62.4981 4.3603 68.8007 6.27297 71.833 6.73567C74.5105 7.53687 76.7007 7.63585 79.2361 6.89475C80.7151 6.39822 82.5847 5.65713 84.5109 4.89358" stroke="#FF0000" stroke-linecap="round"/></svg>`;
 
-      let svgIndex = 0, svgInterval = null, isPlaying = false, isBuffering = false;
+      let svgIndex = 0,
+        svgInterval = null,
+        isPlaying = false,
+        isBuffering = false;
+      let liveUpdateInterval = null;
 
-      fetch('/api/schedule-live')
-        .then(r => r.json())
-        .then(data => {
-          const result = data?.result;
-          let label;
-          if (result?.status === 'scheduled') {
-            label = result?.content?.name || 'On Air';
-          } else {
-            const artist = result?.metadata?.artist;
-            const track  = result?.metadata?.title;
-            label = (artist && track) ? artist + ' \u2014 ' + track : (track || artist || 'On Air');
-          }
-          new SuperMarquee(titleContainer, { content: lineSVG + 'On Air: ' + label, speed: 0.1 });
-        })
-        .catch(() => new SuperMarquee(titleContainer, { content: lineSVG + 'On Air', speed: 0.1 }));
+      function updateLiveMetadata() {
+        fetch("/api/schedule-live")
+          .then((r) => r.json())
+          .then((data) => {
+            const result = data?.result;
+            let title, artist, artwork;
+
+            if (result?.status === "scheduled") {
+              title = result?.content?.name || "On Air";
+              artist = "Seyðisfjörður Community Radio";
+              artwork =
+                result?.content?.cover_image || result?.content?.artwork;
+            } else {
+              artist =
+                result?.metadata?.artist || "Seyðisfjörður Community Radio";
+              title = result?.metadata?.title || "On Air";
+              artwork =
+                result?.metadata?.artwork || result?.metadata?.cover_image;
+            }
+
+            const label =
+              artist && title && title !== "On Air"
+                ? artist + " \u2014 " + title
+                : title;
+            new SuperMarquee(titleContainer, {
+              content: lineSVG + "On Air: " + label,
+              speed: 0.1,
+            });
+
+            // Update Media Session API
+            if ("mediaSession" in navigator && isPlaying) {
+              const artworkArray = artwork
+                ? [{ src: artwork, sizes: "512x512", type: "image/jpeg" }]
+                : [];
+              navigator.mediaSession.metadata = new MediaMetadata({
+                title: title,
+                artist: artist,
+                album: "Live on 107.1 FM",
+                artwork: artworkArray,
+              });
+            }
+          })
+          .catch(
+            () =>
+              new SuperMarquee(titleContainer, {
+                content: lineSVG + "On Air",
+                speed: 0.1,
+              }),
+          );
+      }
+
+      // Initial load
+      updateLiveMetadata();
+
+      // Update every minute
+      liveUpdateInterval = setInterval(updateLiveMetadata, 60000);
 
       function startSvgCycle() {
         if (svgInterval) return;
@@ -76,27 +151,72 @@
           loadingSvg.innerHTML = loadingSVGs[svgIndex];
         }, 120);
       }
-      function stopSvgCycle() { clearInterval(svgInterval); svgInterval = null; }
+      function stopSvgCycle() {
+        clearInterval(svgInterval);
+        svgInterval = null;
+      }
       function updateIcons() {
-        iconPlay.style.display = (!isPlaying && !isBuffering) ? '' : 'none';
-        iconStop.style.display = (isPlaying && !isBuffering)  ? '' : 'none';
-        iconLoad.style.display = isBuffering ? '' : 'none';
-        if (isBuffering) startSvgCycle(); else stopSvgCycle();
+        iconPlay.style.display = !isPlaying && !isBuffering ? "" : "none";
+        iconStop.style.display = isPlaying && !isBuffering ? "" : "none";
+        iconLoad.style.display = isBuffering ? "" : "none";
+        if (isBuffering) startSvgCycle();
+        else stopSvgCycle();
       }
 
-      playBtn.addEventListener('click', () => {
-        if (!isPlaying) { isBuffering = true; updateIcons(); audio.play(); isPlaying = true; }
-        else { audio.pause(); isPlaying = false; isBuffering = false; updateIcons(); }
+      // Media Session API handlers
+      if ("mediaSession" in navigator) {
+        navigator.mediaSession.setActionHandler("play", () => {
+          audio.load();
+          audio.play();
+        });
+        navigator.mediaSession.setActionHandler("pause", () => audio.pause());
+        navigator.mediaSession.setActionHandler("stop", () => audio.pause());
+      }
+
+      playBtn.addEventListener("click", () => {
+        if (!isPlaying) {
+          isBuffering = true;
+          updateIcons();
+          // Reload stream to get back to live
+          audio.load();
+          audio.play();
+          isPlaying = true;
+        } else {
+          audio.pause();
+          isPlaying = false;
+          isBuffering = false;
+          updateIcons();
+        }
       });
-      audio.addEventListener('playing', () => { isPlaying = true;  isBuffering = false; updateIcons(); });
-      audio.addEventListener('waiting', () => { isBuffering = true; updateIcons(); });
-      audio.addEventListener('stalled', () => { if (isPlaying) { isBuffering = true; updateIcons(); } });
-      audio.addEventListener('pause',   () => { isPlaying = false; isBuffering = false; updateIcons(); });
+      audio.addEventListener("playing", () => {
+        isPlaying = true;
+        isBuffering = false;
+        updateIcons();
+        updateLiveMetadata(); // Update metadata when playback starts
+      });
+      audio.addEventListener("waiting", () => {
+        isBuffering = true;
+        updateIcons();
+      });
+      audio.addEventListener("stalled", () => {
+        if (isPlaying) {
+          isBuffering = true;
+          updateIcons();
+        }
+      });
+      audio.addEventListener("pause", () => {
+        isPlaying = false;
+        isBuffering = false;
+        updateIcons();
+        if ("mediaSession" in navigator) {
+          navigator.mediaSession.metadata = null;
+        }
+      });
       updateIcons();
 
       // Pause live radio when archive starts playing
-      window.addEventListener('archive-play', () => audio.pause());
+      window.addEventListener("archive-play", () => audio.pause());
     }
   }
-  customElements.define('radio-player', RadioPlayer);
+  customElements.define("radio-player", RadioPlayer);
 </script>

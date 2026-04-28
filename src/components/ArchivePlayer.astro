@@ -1,0 +1,321 @@
+---
+interface Props {
+  tracks: { title: string; url: string; stream: string; date: string }[];
+  archiveHtml?: string;
+}
+
+const { tracks, archiveHtml } = Astro.props;
+---
+
+<section id="archive" class="relative lg:col-start-2 p-6">
+  <div class="relative z-10 text-center">
+    <h3 class="font-h0 font-serif">Archive</h3>
+    <svg
+      width="181"
+      height="11"
+      viewBox="0 0 181 11"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      class="mx-auto"
+    >
+      <path
+        d="M0.5 10.2838C7.93549 10.2838 16.0009 10.2838 20.392 10.1776C29.4099 9.95929 52.2208 9.85871 60.7232 9.82621C69.2256 9.7937 62.7303 9.94771 72.4492 9.90124C82.168 9.85476 108.298 9.60315 117.943 9.47353C119.96 9.44643 131.313 8.20407 154.419 6.47702C158.339 6.18406 146.276 5.88983 143.593 5.71467C140.91 5.53952 147.937 5.18921 155.661 4.31465C163.385 3.44008 171.592 2.05188 180.284 0.5"
+        stroke="#FC7887"
+        stroke-linecap="round"></path>
+    </svg>
+    {
+      archiveHtml && (
+        <div
+          class="font-p mt-4 max-w-[540px] mx-auto text-center prose"
+          set:html={archiveHtml}
+        />
+      )
+    }
+    <h4 class="font-h0 font-serif mt-10">Recently Aired</h4>
+    <svg
+      width="331"
+      height="16"
+      viewBox="0 0 331 16"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      class="mx-auto"
+    >
+      <path
+        d="M0.00256752 14.3948C-0.031191 14.3948 -0.064949 14.3948 23.2458 14.3948C46.5566 14.3948 93.2129 14.3948 109.044 14.3948C124.874 14.3948 108.466 14.3948 118.822 13.4342C129.179 12.4735 166.798 10.5523 182.675 9.74921C191.546 9.3005 168.542 13.0293 156.303 14.9791C152.544 15.578 183.217 7.42689 194.536 4.38091C205.855 1.33494 204.42 1.60699 197.72 3.85854C191.02 6.11009 179.099 10.3329 173.443 12.5803C167.787 14.8276 168.758 14.9716 188.904 14.2877C209.051 13.6038 248.344 12.0876 263.58 12.3476C278.815 12.6076 268.803 14.6897 276.268 13.8252C283.733 12.9606 308.978 9.08635 320.809 6.881C332.64 4.67565 330.292 4.25665 327.13 4.06463C320.063 3.92027 314.756 4.28015 314.803 4.02323C316.132 3.45553 320.113 1.99994 324.214 0.500244"
+        stroke="#FC7887"
+        stroke-linecap="round"></path>
+    </svg>
+    <div class="mt-6 font-p text-left max-w-[650px] mx-auto">
+      {
+        tracks.length === 0 ? (
+          <p>No recent shows.</p>
+        ) : (
+          tracks.map((track, i) => (
+            <div id={`archive-row-${i}`} class="py-3">
+              <div class="flex items-center gap-3">
+                <button
+                  data-index={i}
+                  data-stream={track.stream}
+                  data-title={track.title}
+                  data-date={track.date}
+                  class="archive-play-btn shrink-0 bg-transparent border-none cursor-pointer p-0"
+                  aria-label={`Play ${track.title}`}
+                >
+                  <svg
+                    class={`icon-play-${i}`}
+                    width="30"
+                    height="30"
+                    viewBox="0 0 50 50"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path
+                      d="M0.499998 49.1914L0.5 0.808593L48.8818 25L0.499998 49.1914Z"
+                      stroke="currentColor"
+                    />
+                  </svg>
+                  <svg
+                    class={`icon-pause-${i}`}
+                    width="20"
+                    height="20"
+                    viewBox="0 0 50 50"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                    style="display:none;"
+                  >
+                    <rect
+                      x="6"
+                      y="4"
+                      width="12"
+                      height="42"
+                      stroke="currentColor"
+                    />
+                    <rect
+                      x="32"
+                      y="4"
+                      width="12"
+                      height="42"
+                      stroke="currentColor"
+                    />
+                  </svg>
+                </button>
+                <span class={`flex-1 font-h2 archive-title-${i}`}>
+                  {track.title}
+                </span>
+                <span class="shrink-0">{track.date}</span>
+                <a
+                  href={track.url}
+                  target="_blank"
+                  rel="noopener"
+                  aria-label="Listen on SoundCloud"
+                  class="shrink-0"
+                >
+                  <img src="/soundcloud-logo.png" alt="SoundCloud" width="20" />
+                </a>
+              </div>
+              <div
+                id={`archive-scrubber-${i}`}
+                style="display:none;"
+                class="mt-2 pl-9"
+              >
+                <label for={`scrubber-${i}`} class="sr-only">
+                  Playback position for {track.title}
+                </label>
+                <input
+                  type="range"
+                  min="0"
+                  max="100"
+                  value="0"
+                  step="0.1"
+                  class="archive-scrubber w-full h-1 cursor-pointer"
+                  style="accent-color: #f51b22;"
+                  id={`scrubber-${i}`}
+                />
+                <div class="flex justify-between text-xs opacity-50 mt-0.5">
+                  <span id={`scrubber-current-${i}`}>0:00</span>
+                  <span id={`scrubber-duration-${i}`}>0:00</span>
+                </div>
+              </div>
+            </div>
+          ))
+        )
+      }
+    </div>
+    <audio id="archive-audio" preload="none" aria-label="Archive audio player"
+    ></audio>
+  </div>
+  <img
+    src="/images/token6.png"
+    alt=""
+    class="block w-[200px] absolute top-[5%] left-[-20%]"
+  />
+  <img
+    src="/images/token8.png"
+    alt=""
+    class="block w-[80px] absolute top-[70%] left-[-85%]"
+  />
+</section>
+
+<script>
+  // --- Archive player ---
+  const archiveAudio = document.getElementById(
+    "archive-audio",
+  ) as HTMLAudioElement;
+  let currentArchiveIndex: number | null = null;
+
+  function fmtTime(s: number): string {
+    return (
+      Math.floor(s / 60) + ":" + String(Math.floor(s % 60)).padStart(2, "0")
+    );
+  }
+
+  function archiveToggle(btn: HTMLButtonElement) {
+    const index = parseInt(btn.dataset.index!);
+    const title = btn.dataset.title!;
+    const date = btn.dataset.date!;
+
+    if (currentArchiveIndex === index && !archiveAudio.paused) {
+      archiveAudio.pause();
+    } else if (currentArchiveIndex === index && archiveAudio.paused) {
+      window.dispatchEvent(new CustomEvent("archive-play"));
+      archiveAudio.play();
+    } else {
+      if (currentArchiveIndex !== null) archiveSetPaused(currentArchiveIndex);
+      currentArchiveIndex = index;
+      archiveAudio.src = btn.dataset.stream!;
+      window.dispatchEvent(new CustomEvent("archive-play"));
+      archiveAudio.play();
+      archiveAttachScrubber(index);
+
+      // Set Media Session metadata for archive
+      if ("mediaSession" in navigator) {
+        navigator.mediaSession.metadata = new MediaMetadata({
+          title: title,
+          artist: "Seyðisfjörður Community Radio",
+          album: "Archive - " + date,
+          artwork: [
+            { src: "/images/rose.png", sizes: "512x512", type: "image/png" },
+          ],
+        });
+      }
+    }
+  }
+
+  function archiveAttachScrubber(index: number) {
+    const scrubberContainer = document.getElementById(
+      `archive-scrubber-${index}`,
+    );
+    if (!scrubberContainer) return;
+    scrubberContainer.style.display = "";
+
+    archiveAudio.addEventListener("timeupdate", function onTime() {
+      if (currentArchiveIndex !== index) {
+        archiveAudio.removeEventListener("timeupdate", onTime);
+        return;
+      }
+      const scrubber = document.getElementById(
+        `scrubber-${index}`,
+      ) as HTMLInputElement;
+      if (!archiveAudio.duration || isNaN(archiveAudio.duration)) return;
+      scrubber.value = String(
+        (archiveAudio.currentTime / archiveAudio.duration) * 100,
+      );
+      const currentEl = document.getElementById(`scrubber-current-${index}`);
+      const durationEl = document.getElementById(`scrubber-duration-${index}`);
+      if (currentEl) currentEl.textContent = fmtTime(archiveAudio.currentTime);
+      if (durationEl) durationEl.textContent = fmtTime(archiveAudio.duration);
+    });
+    archiveAudio.addEventListener("play", function onPlay() {
+      if (currentArchiveIndex !== index) {
+        archiveAudio.removeEventListener("play", onPlay);
+        return;
+      }
+      archiveSetPlaying(index);
+    });
+    archiveAudio.addEventListener("pause", function onPause() {
+      if (currentArchiveIndex !== index) {
+        archiveAudio.removeEventListener("pause", onPause);
+        return;
+      }
+      archiveSetPaused(index);
+    });
+  }
+
+  // Media Session API handlers for archive
+  if ("mediaSession" in navigator) {
+    navigator.mediaSession.setActionHandler("play", () => {
+      if (currentArchiveIndex !== null) archiveAudio.play();
+    });
+    navigator.mediaSession.setActionHandler("pause", () =>
+      archiveAudio.pause(),
+    );
+    navigator.mediaSession.setActionHandler("seekbackward", () => {
+      archiveAudio.currentTime = Math.max(0, archiveAudio.currentTime - 10);
+    });
+    navigator.mediaSession.setActionHandler("seekforward", () => {
+      archiveAudio.currentTime = Math.min(
+        archiveAudio.duration,
+        archiveAudio.currentTime + 10,
+      );
+    });
+  }
+
+  function archiveSeek(value: number) {
+    if (archiveAudio.duration)
+      archiveAudio.currentTime = (value / 100) * archiveAudio.duration;
+  }
+
+  function archiveSetPlaying(index: number) {
+    const playIcon = document.querySelector(
+      `.icon-play-${index}`,
+    ) as HTMLElement;
+    const pauseIcon = document.querySelector(
+      `.icon-pause-${index}`,
+    ) as HTMLElement;
+    const title = document.querySelector(
+      `.archive-title-${index}`,
+    ) as HTMLElement;
+    if (playIcon) playIcon.style.display = "none";
+    if (pauseIcon) pauseIcon.style.display = "";
+    if (title) title.style.color = "#f51b22";
+  }
+
+  function archiveSetPaused(index: number) {
+    const playIcon = document.querySelector(
+      `.icon-play-${index}`,
+    ) as HTMLElement;
+    const pauseIcon = document.querySelector(
+      `.icon-pause-${index}`,
+    ) as HTMLElement;
+    const scrubber = document.getElementById(`archive-scrubber-${index}`);
+    const title = document.querySelector(
+      `.archive-title-${index}`,
+    ) as HTMLElement;
+    if (playIcon) playIcon.style.display = "";
+    if (pauseIcon) pauseIcon.style.display = "none";
+    if (scrubber) scrubber.style.display = "none";
+    if (title) title.style.color = "";
+    currentArchiveIndex = null;
+
+    // Clear Media Session metadata
+    if ("mediaSession" in navigator) {
+      navigator.mediaSession.metadata = null;
+    }
+  }
+
+  // Event delegation for play buttons
+  document.addEventListener("click", (e) => {
+    const btn = (e.target as HTMLElement).closest(
+      ".archive-play-btn",
+    ) as HTMLButtonElement;
+    if (btn) archiveToggle(btn);
+  });
+
+  // Event delegation for scrubbers
+  document.addEventListener("input", (e) => {
+    const scrubber = e.target as HTMLInputElement;
+    if (scrubber.classList.contains("archive-scrubber")) {
+      archiveSeek(parseFloat(scrubber.value));
+    }
+  });
+</script>
