@@ -1,0 +1,22 @@
+---
+// Displays the current local time in Reykjavik, updated every second.
+---
+
+<div class="fixed bottom-6 right-6 text-right text-black" aria-label="Local time in Reykjavik">
+  <div class="font-p font-serif italic" aria-hidden="true">Local Time</div>
+  <div class="font-h1" id="local-clock" aria-live="off" aria-atomic="true"></div>
+</div>
+
+<script is:inline>
+  (function () {
+    const el = document.getElementById('local-clock');
+    function tick() {
+      el.textContent = new Date().toLocaleTimeString('en-GB', {
+        hour: '2-digit', minute: '2-digit', second: '2-digit',
+        timeZone: 'Atlantic/Reykjavik'
+      });
+    }
+    tick();
+    setInterval(tick, 1000);
+  })();
+</script>

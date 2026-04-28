@@ -1,0 +1,77 @@
+---
+import Clock from '../components/Clock.astro';
+import RadioPlayer from '../components/RadioPlayer.astro';
+import '../styles/main.css';
+
+interface Props {
+  title?: string;
+}
+const { title = 'Seyðisfjörður Community Radio' } = Astro.props;
+---
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{title}</title>
+  <meta name="robots" content="index,follow">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content={title}>
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico">
+  <script is:inline defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+  <script is:inline src="https://cdn.jsdelivr.net/npm/sp-supermarquee/dist/SuperMarquee.min.js"></script>
+</head>
+
+<body x-data="{ chat: false }">
+
+  <a href="#main-content" class="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-50 focus:bg-white focus:text-black focus:px-3 focus:py-1">
+    Skip to content
+  </a>
+
+  <!-- Chat panel -->
+  <div
+    x-show="chat"
+    role="dialog"
+    aria-modal="true"
+    aria-label="Live chat"
+    class="fixed bottom-20 left-6 z-30 flex flex-col w-[500px] h-[420px] overflow-hidden"
+    style="background: rgba(220,215,205,0.9); mix-blend-mode: hard-light; box-shadow: 0 0 0 1px rgba(0,0,0,0.12);">
+    <div class="flex items-center justify-between px-3 py-1.5 border-b border-black/10">
+      <span class="font-serif" aria-hidden="true" style="font-size:0.7rem; letter-spacing:0.1em; text-transform:uppercase; opacity:0.5;">Chat</span>
+      <button @click="chat = false" aria-label="Close chat" class="bg-transparent border-none cursor-pointer" style="font-size:0.75rem; opacity:0.5;">&times;</button>
+    </div>
+    <iframe
+      title="Community Radio Live Chat"
+      src="https://app.radiocult.fm/embed/chat/seyisfjorur-community-radio?theme=light&primaryColor=%23000000&corners=sharp"
+      class="flex-1 w-full border-0"
+      allow="microphone"></iframe>
+  </div>
+
+  <header>
+    <a class="fixed bottom-6 left-6 text-black lg:top-6 lg:bottom-auto lg:text-white" href="/">
+      <span class="font-serif font-h1 leading-[0.55]">Seyðisfjörður<br />
+        Community Radio</span><br />
+      <span class="font-p relative -top-1">107.1 FM</span>
+    </a>
+
+    <nav aria-label="Main navigation" class="hidden lg:block fixed bottom-6 left-6 text-white font-h1">
+      <ul class="space-y-1">
+        <li><a href="#about">About</a></li>
+        <li><a href="#archive">Archive</a></li>
+        <li><a href="#newsletter">Newsletter</a></li>
+        <li><a href="#schedule">Schedule</a></li>
+        <li><a href="#chat" @click.prevent="chat = true">Chat</a></li>
+      </ul>
+    </nav>
+
+    <RadioPlayer />
+    <Clock />
+  </header>
+
+  <main id="main-content">
+    <slot />
+  </main>
+
+</body>
+</html>

@@ -1,0 +1,58 @@
+---
+// Layout for standalone markdown pages (e.g. privacy policy).
+// Usage in a .md file:
+//   ---
+//   layout: ../layouts/Page.astro
+//   title: Privacy Policy
+//   ---
+const { frontmatter } = Astro.props;
+---
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{frontmatter.title} | Seyðisfjörður Community Radio</title>
+  <meta name="robots" content="noindex">
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico">
+  <style>
+    @font-face {
+      font-family: "TimesNewArialVF";
+      src: url("/fonts/TimesNewArialVF.woff2") format("woff2"),
+           url("/fonts/TimesNewArialVF.woff") format("woff");
+      font-style: oblique -90deg 90deg;
+      font-weight: 0 1000;
+    }
+    * { box-sizing: border-box; -webkit-font-smoothing: antialiased; }
+    body {
+      font-family: "TimesNewArialVF", sans-serif;
+      font-size: 0.9375rem;
+      line-height: 1.5;
+      max-width: 680px;
+      margin: 0 auto;
+      padding: 3rem 1.5rem 6rem;
+      font-variation-settings: "srff" 0, "nvgn" 0, "wght" 0;
+    }
+    a.back {
+      display: inline-block;
+      margin-bottom: 2rem;
+      font-size: 0.875rem;
+      color: inherit;
+      text-underline-offset: 3px;
+    }
+    h1 {
+      font-size: 1.75rem;
+      font-variation-settings: "srff" 100, "nvgn" 0, "wght" 0;
+      margin: 0 0 2rem;
+    }
+    h2 { font-size: 1.25rem; font-variation-settings: "srff" 100, "nvgn" 0, "wght" 0; margin: 2rem 0 0.5rem; }
+    p { margin: 0 0 1em; }
+    a { color: inherit; }
+  </style>
+</head>
+<body>
+  <a class="back" href="/">← Back</a>
+  <h1>{frontmatter.title}</h1>
+  <slot />
+</body>
+</html>
