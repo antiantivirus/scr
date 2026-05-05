@@ -1,17 +1,13 @@
 ---
 archive: |
-  Check out the archive of Seyðisfjörður Community Radio
+  Check out [the archive of Seyðisfjörður Community Radio](https://soundcloud.com/seydisfjordur)
   Here you can find and listen to almost everything
   everything since 2016
   Anything going into anything else
   As a hand searching in a purse
 
 newsletter: |
-  Follow our Telegram group to get notified with our weekly program
-
-  Find the newsletter archive in the LungA library
-
-  Get in touch with us
+  Find the newsletter archive in the [LungA library](http://lungalibrary.is)
 
 footer: |
   Seyðisfjörður Community Radio 2026. [Privacy Policy](https://lungaschool.is/media/pages/about/4710013789-1744280163/lunga-school-privacy-and-handling-of-personal-information-policy-2024.pdf).
@@ -37,7 +33,7 @@ Hosting [LungA Radio School](https://www.lungaschool.is/en/radio): a-radio-makin
 Generally entangled with [LungA School](http://lungaschool.is/).
 Part of the Independent Community Radio Network/[ICRN](https://icrn.live/).
 Sign up for our [newsletter](#newsletter)
-Follow our Telegram group to get notified
+Follow our [Telegram group](https://t.me/+YEDNJtCJpKJhMDA0#) to get notified
 Check out the [broadcast archive](#archive).
 Spend time in the [LungA library](http://lungalibrary.is).
 [Get in touch with us.](mailto:contact@seydisfjordurcommunityradio.net)
