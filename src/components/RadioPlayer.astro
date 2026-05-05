@@ -10,7 +10,7 @@
   <div class="relative flex items-center gap-6 lg:block mt-2 lg:mt-0">
     <div
       id="show-title-marquee"
-      class="backslanted font-h1 w-60 h-12 lg:h-14 pt-3.75 lg:w-full"
+      class="backslanted font-h1 w-60 h-11 lg:h-14 pt-2.5 lg:w-full leading-[1.2]"
     >
     </div>
     <div
@@ -84,7 +84,7 @@
         `<svg width="24" height="27" viewBox="0 0 24 27" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M3.75567 5.2069C3.21348 5.04525 1.60622 5.03723 0.845149 5.25811C0.521395 5.35207 0.334489 5.44224 0.701578 5.43641C2.00182 5.41578 4.40702 4.60107 7.28538 3.25767C10.1404 1.9252 11.8171 0.753092 12.2796 0.505472C12.3809 0.451249 12.2658 0.744298 10.3342 3.94992C8.40262 7.15555 4.67194 13.3166 2.93912 16.4287C1.20629 19.5409 1.58438 19.4174 4.02316 17.5898C6.46195 15.7622 10.95 12.2341 13.4011 10.2823C15.8522 8.33052 16.1304 8.06197 14.8222 9.69462C13.5139 11.3273 10.6108 14.8693 8.42868 17.8539C6.24656 20.8385 4.87344 23.1583 4.13616 24.4575C3.39888 25.7567 3.33904 25.965 3.89349 25.96C4.44793 25.955 5.61846 25.7305 9.10186 24.3658C12.5853 23.001 18.3461 20.5028 21.0514 19.5398C23.7568 18.5768 23.2322 19.2246 22.6181 20.0689C22.0041 20.9132 21.3165 21.9344 20.608 22.9865" stroke="#FC7887" stroke-linecap="round"/></svg>`,
       ];
 
-      const lineSVG = `<svg width="86" height="9" viewBox="0 0 86 9" fill="none" xmlns="http://www.w3.org/2000/svg" style="display:inline-block;vertical-align:middle;position:relative;top:0.4rem;margin-right:1rem;margin-left:0.4rem"><path d="M0.500122 4.70866C3.13509 3.46873 9.76979 0.583306 12.6449 0.500986C15.4759 0.419931 19.6936 5.35478 23.5495 7.86155C24.3713 8.39583 26.0439 6.38984 28.2351 4.52046C29.7385 3.23783 36.4009 3.64206 45.5137 3.46084C50.7129 3.35744 52.7244 2.798 55.5493 3.24955C62.4981 4.3603 68.8007 6.27297 71.833 6.73567C74.5105 7.53687 76.7007 7.63585 79.2361 6.89475C80.7151 6.39822 82.5847 5.65713 84.5109 4.89358" stroke="#FF0000" stroke-linecap="round"/></svg>`;
+      const lineSVG = `<svg class="marquee-line" width="86" height="9" viewBox="0 0 86 9" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M0.500122 4.70866C3.13509 3.46873 9.76979 0.583306 12.6449 0.500986C15.4759 0.419931 19.6936 5.35478 23.5495 7.86155C24.3713 8.39583 26.0439 6.38984 28.2351 4.52046C29.7385 3.23783 36.4009 3.64206 45.5137 3.46084C50.7129 3.35744 52.7244 2.798 55.5493 3.24955C62.4981 4.3603 68.8007 6.27297 71.833 6.73567C74.5105 7.53687 76.7007 7.63585 79.2361 6.89475C80.7151 6.39822 82.5847 5.65713 84.5109 4.89358" stroke="#FF0000" stroke-linecap="round"/></svg>`;
 
       let svgIndex = 0,
         svgInterval = null,
@@ -230,3 +230,20 @@
   }
   customElements.define("radio-player", RadioPlayer);
 </script>
+
+<style is:global>
+  .marquee-line {
+    display: inline-block;
+    vertical-align: middle;
+    position: relative;
+    top: 0.5rem;
+    margin-right: 1rem;
+    margin-left: 0.4rem;
+  }
+
+  @media (min-width: 1024px) {
+    .marquee-line {
+      top: 0.75rem;
+    }
+  }
+</style>
