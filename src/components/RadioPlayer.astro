@@ -97,21 +97,24 @@
       .then((r) => r.json())
       .then((data) => {
         const result = data?.result;
-        liveDot.style.display = result?.content?.media?.type === "live" ? "" : "none";
-        let title, artist, artwork;
+        const isLive =
+          result?.content?.media?.type === "live" ||
+          result?.metadata?.duration === "unknown";
+        liveDot.style.display = isLive ? "" : "none";
 
-        if (result?.status === "schedule") {
-          title = result?.metadata?.title || result?.content?.title || "On Air";
-          artist = result?.metadata?.artist || null;
-          artwork = result?.metadata?.artwork || result?.metadata?.cover_image;
-        } else {
-          artist = result?.metadata?.artist || null;
-          title = result?.metadata?.title || "On Air";
-          artwork = result?.metadata?.artwork || result?.metadata?.cover_image;
-        }
+        const metadataTitle =
+          result?.metadata?.title && result?.metadata?.title !== "Live"
+            ? result.metadata.title
+            : null;
+        const title =
+          result?.content?.title ||
+          metadataTitle ||
+          (isLive ? "Live Broadcast" : "On Air");
+        const artist = result?.metadata?.artist || null;
+        const artwork = result?.metadata?.artwork || result?.metadata?.cover_image;
 
         const label =
-          artist && title && title !== "On Air"
+          artist && title && title !== "On Air" && title !== "Live Broadcast"
             ? artist + " — " + title
             : title;
 

@@ -165,14 +165,26 @@ const underlineSVGs = [
         loading="eager"
         fetchpriority="high"
       />
-      <img
-        src={antennaImg.src}
-        width={antennaImg.width}
-        height={antennaImg.height}
-        alt=""
-        class="block lg:hidden absolute bottom-1/8 min-w-[125px] right-0 w-1/5 object-cover"
-        loading="lazy"
-      />
+      <div
+        class="lg:hidden absolute bottom-1/8 min-w-[125px] right-0 w-1/5 flex flex-col items-center gap-2"
+      >
+        <button
+          type="button"
+          data-chat-open
+          aria-label="Open live chat"
+          class="italic font-serif font-h2 text-black bg-transparent border-none cursor-pointer"
+        >
+          Chat
+        </button>
+        <img
+          src={antennaImg.src}
+          width={antennaImg.width}
+          height={antennaImg.height}
+          alt=""
+          class="w-full object-cover"
+          loading="lazy"
+        />
+      </div>
       <img
         src={token4Img.src}
         width={token4Img.width}
