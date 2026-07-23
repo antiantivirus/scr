@@ -14,9 +14,7 @@
       class="backslanted font-h1 w-full h-11 lg:h-14 pt-2.5 leading-[1.2]"
     >
     </div>
-    <div
-      class="absolute inset-0 flex items-center pointer-events-none px-6"
-    >
+    <div class="absolute inset-0 flex items-center pointer-events-none px-6">
       <div id="live-dot" class="live-dot shrink-0 mr-4" style="display:none;">
       </div>
       <button
@@ -77,6 +75,22 @@
   const loadingSvg = document.getElementById("loading-svg")!;
   const titleContainer = document.getElementById("show-title-marquee")!;
   const liveDot = document.getElementById("live-dot")!;
+  const artworkWrap = document.getElementById("now-playing-artwork")!;
+  const artworkImg = document.getElementById(
+    "now-playing-artwork-img",
+  ) as HTMLImageElement;
+
+  function showArtwork(src: string, label: string) {
+    artworkImg.src = src;
+    artworkImg.alt = label;
+    artworkWrap.classList.remove("hidden");
+    artworkWrap.classList.add("block");
+  }
+  function hideArtwork() {
+    artworkWrap.classList.add("hidden");
+    artworkWrap.classList.remove("block");
+    artworkImg.removeAttribute("src");
+  }
 
   const loadingSVGs = [
     `<svg width="43" height="38" viewBox="0 0 43 38" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M31.803 19.8048C25.7429 19.8906 12.7702 19.5224 11.7457 18.1596C11.1353 17.3478 11.3673 15.7295 11.3808 16.2437C11.5974 24.4759 9.27949 32.3902 7.50783 36.1932C6.99403 37.296 6.77252 36.4569 6.90998 35.6255C7.19926 33.8759 8.63696 32.009 11.0839 29.3993C14.818 25.4169 20.8368 21.6209 26.2768 18.5094C29.3879 16.73 20.4738 20.3512 5.62094 26.2316C0.789043 28.1446 1.68943 28.4625 5.65282 28.5522C9.61621 28.6419 16.6766 28.6419 18.9088 28.3282C20.0024 28.1745 13.7589 25.8911 11.0339 24.3992C9.48725 23.5524 9.02784 21.9952 8.76955 20.3143C8.65511 19.5696 8.85499 19.0147 9.20715 18.4166C9.98722 17.0918 13.0687 15.0902 18.9655 11.8599C26.9254 7.49949 32.2724 5.3866 31.7134 4.28454C30.2746 1.44783 23.08 1.48471 16.6906 0.672095C14.0554 0.336943 12.6261 0.388945 14.7837 1.7725C22.3265 6.60942 31.1765 10.4894 35.61 13.691C39.0423 16.1696 40.785 18.5753 41.7422 20.1643C42.1532 20.8465 42.1629 21.4122 41.6616 21.9043C38.5761 24.9329 32.1111 25.2833 29.6037 27.3885C29.1824 27.7422 29.3857 28.3967 29.6378 28.8937C30.1984 29.9994 31.4892 30.717 31.9962 31.1399C37.1681 35.4543 15.0994 25.1802 14.0343 25.0717C12.9131 25.2064 16.6846 29.4311 19.1703 31.9321C17.2965 30.3413 9.0573 22.9436 0.5 14.8645" stroke="#547B23" stroke-linecap="round"/></svg>`,
@@ -111,7 +125,8 @@
           metadataTitle ||
           (isLive ? "Live Broadcast" : "On Air");
         const artist = result?.metadata?.artist || null;
-        const artwork = result?.metadata?.artwork || result?.metadata?.cover_image;
+        const artwork =
+          result?.metadata?.artwork || result?.metadata?.cover_image;
 
         const label =
           artist && title && title !== "On Air" && title !== "Live Broadcast"
@@ -123,13 +138,25 @@
           speed: 0.1,
         });
 
+        const artworkSrc =
+          typeof artwork === "string"
+            ? artwork
+            : (artwork?.["512x512"] ?? artwork?.original);
+
+        if (isPlaying && artworkSrc) {
+          showArtwork(artworkSrc, label);
+        } else {
+          hideArtwork();
+        }
+
         if ("mediaSession" in navigator && isPlaying) {
-          const artworkSrc = typeof artwork === "string" ? artwork : artwork?.["512x512"] ?? artwork?.original;
           navigator.mediaSession.metadata = new MediaMetadata({
             title: title,
             artist: "live on Seyðisfjörður Community Radio",
             album: "Live on 107.1 FM",
-            artwork: artworkSrc ? [{ src: artworkSrc, sizes: "512x512", type: "image/jpeg" }] : [],
+            artwork: artworkSrc
+              ? [{ src: artworkSrc, sizes: "512x512", type: "image/jpeg" }]
+              : [],
           });
         }
       })
@@ -207,6 +234,7 @@
     isPlaying = false;
     isBuffering = false;
     updateIcons();
+    hideArtwork();
     if ("mediaSession" in navigator) {
       navigator.mediaSession.metadata = null;
     }
